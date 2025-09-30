@@ -20,7 +20,6 @@ from storage.mat_saver import MATSaver # Import the new MATSaver
 # camera package must exist: camera/__init__.py
 CAMERA_ENABLED = True           # set False to disable video recording (useful on low-power devices)
 CAMERA_DEVICE_INDEX = 0
-CAMERA_OUT_PATH = "cam.mp4"
 CAMERA_FPS = 30
 CAMERA_LOW_POWER = False        # set True for Raspberry Pi or low-power mode (less overlay, lower res)
 CAMERA_BUFFER_LEN = 2000        # how many timestamps to retain for lookup
@@ -65,7 +64,7 @@ def main():
         print("[Main] Starting camera recorder...")
         camera = CameraRecorder(
             device_index=CAMERA_DEVICE_INDEX,
-            out_path=CAMERA_OUT_PATH,
+            out_path=camera_out_path,
             requested_fps=CAMERA_FPS,
             buffer_len=CAMERA_BUFFER_LEN,
             overlay_timestamp=True,
