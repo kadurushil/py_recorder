@@ -30,6 +30,8 @@ class MATSaver:
             # Create an object array to accommodate potentially ragged arrays
             mat_dict[key] = np.array(val_list, dtype=object)
 
-        print(f"[MATSaver] Saving {len(self._frames)} frames to {self.path}...")
-        sio.savemat(self.path, mat_dict)
+        #sio.savemat(self.path, mat_dict)
+        fHist_struct = {'fHist': mat_dict}
+        print(f"[MATSAVER] saving {len(self._frames)} frames to {self.path}...")
+        sio.savemat(self.path, fHist_struct) #save the new dictionary 
         print(f"[MATSaver] Saved successfully.")
