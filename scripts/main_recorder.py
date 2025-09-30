@@ -8,11 +8,13 @@ import serial
 import sys
 import time
 import os
+import datetime
 
 from radar.board_cli import open_cli, send_cfg
 from radar.serial_reader import read_one_frame
 from radar.parse_wrapper import parse_frame
 from storage.jsonl_saver import JSONLSaver
+from storage.mat_saver import MATSaver # Import the new MATSaver
 
 # Camera & sync utilities
 # camera package must exist: camera/__init__.py
@@ -48,8 +50,15 @@ def safe_to_list(val):
 def main():
     cli_port = "COM5"     # TODO: update to your CLI port
     cfg_file = "cfg/MotionDetect.cfg"  # TODO: path to your config
-    out_jsonl = "radar_log.jsonl"
-
+    log_dir = "LOGS" # define the main LOG directory
+    # --- Create a unique, timestamped sub-directory for this run ---
+    timestamp_str = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    session_log_dir = os.path.join(log_dir, timestamp_str)
+    os.makedirs(session_log_dir, exist_ok=True)
+    # --- Update output file paths to use the new session directory ---
+    camera_out_path = os.path.join(session_log_dir, "cam.mp4")
+    out_jsonl = os.path.join(session_log_dir, "radar_log.jsonl")
+    out_mat = os.path.join(session_log_dir, "radar_log.mat")
     # Start camera (optional)
     camera = None
     if CAMERA_ENABLED:
@@ -84,7 +93,8 @@ def main():
     ser.baudrate = final_baud
     ser.reset_input_buffer()
 
-    saver = JSONLSaver(out_jsonl)
+    jsonl_saver = JSONLSaver(out_jsonl)
+    mat_saver = MATSaver(out_mat) # Instantiate the MATSaver
 
     print(f"Listening on {ser.port} at {final_baud} baud...")
     frame_count = 0
@@ -125,7 +135,8 @@ def main():
                     record["video_frame_ts"] = None
                     record["video_time_delta"] = None
 
-            saver.write_frame(record)
+            jsonl_saver.write_frame(record) # write to JSON buffer
+            mat_saver.write_frame(record) # Write to MAT buffer
             frame_count += 1
             print(f"[Frame {frame_count}] NumPoints={record['numPoints']}")
 
@@ -134,7 +145,8 @@ def main():
 
     # cleanup
     print("[Main] Stopping components...")
-    saver.close()
+    jsonl_saver.close()
+    mat_saver.close() # Save the .mat file
     if camera is not None:
         camera.stop(wait=True)
     if ser.is_open:
