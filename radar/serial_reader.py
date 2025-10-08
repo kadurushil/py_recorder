@@ -69,3 +69,16 @@ def read_one_frame(ser):
         return None
 
     return full_hdr + payload
+
+    """ # =================================================================
+    # ADD THIS CODE FOR THE TEST
+    print("\n================ PYTHON RAW FRAME ================")
+    print(f"Frame: {frameNum}, Total Length: {totalPacketLen}, TLVs: {numTLVs}")
+    hex_string = ' '.join(f'{b:02X}' for b in full_frame)
+    print(f"Raw Hex ({len(full_frame)} bytes): {hex_string}")
+    print("====================================================\n")
+    # END OF TEST CODE
+    # ================================================================= """
+
+    return full_frame
+

@@ -9,6 +9,7 @@ import sys
 import time
 import os
 import datetime
+import struct
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -140,6 +141,22 @@ def main():
                 print("[WARN] Could not read frame, resyncing...")
                 continue
 
+            # =================================================================
+            # ADD THIS CODE FOR THE TEST
+            # This will print the raw hex data for every frame received.
+            print("\n================ PYTHON RAW FRAME ================", flush=True)
+            try:
+                # We do a quick unpack here just to get the header info for the log
+                _, _, totalPacketLen, _, frameNum, _, _, numTLVs, _ = struct.unpack('<Q8I', frame_bytes[:40])
+                print(f"Frame: {frameNum}, Total Length: {totalPacketLen}, TLVs: {numTLVs}", flush=True)
+            except Exception as e:
+                print(f"Could not parse header for logging: {e}", flush=True)
+
+            hex_string = ' '.join(f'{b:02X}' for b in frame_bytes)
+            print(f"Raw Hex ({len(frame_bytes)} bytes): {hex_string}", flush=True)
+            print("====================================================\n", flush=True)
+            # END OF TEST CODE
+            # =================================================================
             parsed = parse_frame(frame_bytes)
             if parsed.get("error", 1) != 0:
                 print("[WARN] Parser error")
