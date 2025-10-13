@@ -149,6 +149,22 @@ def main():
                 # We do a quick unpack here just to get the header info for the log
                 _, _, totalPacketLen, _, frameNum, _, _, numTLVs, _ = struct.unpack('<Q8I', frame_bytes[:40])
                 print(f"Frame: {frameNum}, Total Length: {totalPacketLen}, TLVs: {numTLVs}", flush=True)
+
+                # --- START: Added code to print TLV types ---
+                tlv_types = []
+                current_pos = 40  # Start after the 40-byte frame header
+                tlv_header_len = 8 # Each TLV header is 8 bytes (type, length)
+                for _ in range(numTLVs):
+                    if current_pos + tlv_header_len > len(frame_bytes):
+                        break # Avoid reading past the end of the buffer
+                    try:
+                        tlv_type, tlv_length = struct.unpack('<2I', frame_bytes[current_pos:current_pos + tlv_header_len])
+                        tlv_types.append(tlv_type)
+                        current_pos += tlv_header_len + tlv_length
+                    except struct.error:
+                        break # Stop if we can't unpack a TLV header
+                print(f"TLV Types: {tlv_types}", flush=True)
+                # --- END: Added code to print TLV types ---
             except Exception as e:
                 print(f"Could not parse header for logging: {e}", flush=True)
 
