@@ -185,6 +185,7 @@ def main():
                 "numPoints": int(parsed.get("numDetectedPoints", 0)),
                 "pointCloud": safe_to_list(parsed.get("pointCloud")),
                 "rangeProfile": safe_to_list(parsed.get("rangeProfile")),
+                "rangeAzimuthHeatmapMajor": safe_to_list(parsed.get("rangeAzimuthHeatmapMajor")),
             }
 
             # if camera enabled, find closest video frame timestamp
