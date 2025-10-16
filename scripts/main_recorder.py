@@ -10,6 +10,7 @@ import time
 import os
 import datetime
 import struct
+import cv2
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -22,7 +23,6 @@ from radar.port_finder import find_cli_port # Correctly imported
 
 # Camera & sync utilities
 CAMERA_ENABLED = True
-CAMERA_DEVICE_INDEX = 0
 CAMERA_FPS = 30
 CAMERA_LOW_POWER = False
 CAMERA_BUFFER_LEN = 2000
@@ -67,6 +67,51 @@ def choose_cfg_file():
         except ValueError:
             print("Invalid input, please enter a number.")
 
+def choose_camera_device(use_dshow=True):
+    """Lists available camera devices and prompts the user to choose one.
+    
+    On Windows, it uses a library to get friendly device names.
+    """
+    print("\nSearching for available cameras...")
+    
+    # On Windows, we can get more detailed names using a different method
+    if os.name == 'nt' and use_dshow:
+        try:
+            from pygrabber.dshow_graph import FilterGraph
+            graph = FilterGraph()
+            devices = graph.get_input_devices()
+            available_cameras = [{'index': i, 'name': name} for i, name in enumerate(devices)]
+        except ImportError:
+            print("[WARN] 'pygrabber' not installed. Camera names will be generic.")
+            print("        Install it with: pip install pygrabber")
+            return choose_camera_device(use_dshow=False) # Retry with basic method
+    else:
+        # Basic method for non-Windows or if pygrabber fails
+        available_cameras = []
+        for i in range(10): # Check first 10 indices
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                available_cameras.append({'index': i, 'name': f"Camera {i}"})
+                cap.release()
+    
+    if not available_cameras:
+        print("[ERROR] No cameras found.")
+        return None
+    
+    print("Please choose a camera device:")
+    for cam in available_cameras:
+        print(f"  [{cam['index'] + 1}] {cam['name']}")
+    
+    while True:
+        try:
+            choice = int(input(f"Enter number (1-{len(available_cameras)}): ")) - 1
+            if 0 <= choice < len(available_cameras):
+                return available_cameras[choice]['index']
+            else:
+                print("Invalid number, please try again.")
+        except ValueError:
+            print("Invalid input, please enter a number.")
+
 def safe_to_list(val):
     """Convert numpy arrays and lists to plain lists for JSON. Accept None."""
     import numpy as np
@@ -79,6 +124,8 @@ def safe_to_list(val):
     return [val]
 
 def main():
+    global CAMERA_ENABLED
+
     # --- Change 1: Automatically find the CLI port ---
     cli_port = find_cli_port()
     if not cli_port:
@@ -98,9 +145,11 @@ def main():
     out_mat = os.path.join(session_log_dir, "radar_log.mat")
     camera = None
     if CAMERA_ENABLED:
+        # --- Choose Camera ---
+        camera_device_index = choose_camera_device()
         print("[Main] Starting camera recorder...")
         camera = CameraRecorder(
-            device_index=CAMERA_DEVICE_INDEX,
+            device_index=camera_device_index,
             out_path=camera_out_path,
             requested_fps=CAMERA_FPS,
             buffer_len=CAMERA_BUFFER_LEN,
