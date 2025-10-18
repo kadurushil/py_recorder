@@ -12,7 +12,7 @@ import datetime
 import struct
 import cv2
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from radar.board_cli import open_cli, send_cfg
 from radar.serial_reader import read_one_frame

@@ -1,23 +1,21 @@
 # launch.py
-import subprocess
-import sys
 import os
+import sys
 
-# This ensures the script looks for modules in the correct project structure
-script_path = os.path.join('scripts', 'main_recorder.py')
+# Add the 'scripts' directory to the Python path
+sys.path.append(os.path.abspath('scripts'))
 
-print("--- Launching Radar Recorder ---")
-try:
-    # We use sys.executable to ensure we run the script with the same Python
-    # that was used to launch this file.
-    subprocess.run([sys.executable, script_path], check=True)
-except FileNotFoundError:
-    print(f"\n[ERROR] Could not find the main script at: {script_path}")
-    print("Please make sure you are running this from the root of the 'py_recorder' directory.")
-except subprocess.CalledProcessError as e:
-    print(f"\n[ERROR] The recorder script exited with an error (code {e.returncode}).")
-except KeyboardInterrupt:
-    print("\n--- Closing... ---")
+# Now you can import the main_recorder module
+from main_recorder import main
 
-print("\n--- Recording session finished ---")
-input("Press Enter to exit.")
+if __name__ == "__main__":
+    print("--- Launching Radar Recorder ---")
+    try:
+        main() # Call the main function directly
+    except Exception as e:
+        print(f"\n[ERROR] An unexpected error occurred: {e}")
+    except KeyboardInterrupt:
+        print("\n--- Closing... ---")
+
+    print("\n--- Recording session finished ---")
+    input("Press Enter to exit.")
